@@ -170,8 +170,11 @@ def load_data():
 
             max_cv = sf(attr.get("maxCellVoltage", 0))
             min_cv = sf(attr.get("minCellVoltage", 0))
+            cv_diff = sf(attr.get("cellVoltDiff", 0))
+            
             if max_cv > 10: max_cv /= 1000
             if min_cv > 10: min_cv /= 1000
+            if cv_diff > 1: cv_diff /= 1000
 
             rec = dict(
                 vehicle_id     = data.get("name", "Unknown"),
@@ -199,7 +202,7 @@ def load_data():
                 max_temp       = sf(attr.get("maxTemp")),
                 max_cell_v     = max_cv,
                 min_cell_v     = min_cv,
-                cell_volt_diff = sf(attr.get("cellVoltDiff", 0)),
+                cell_volt_diff = cv_diff,
                 odokm          = sf(attr.get("odokm")),
                 fw_version     = attr.get("fwVersion", ""),
                 # Fault flags
