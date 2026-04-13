@@ -813,14 +813,26 @@ else:
 
     # ── KPI METRIC ROW ───────────────────────────────────────────────────────
     m1, m2, m3, m4, m5 = st.columns(5)
-    m1.metric("⚡ Power",      f"{abs(r.power_w):.0f} W",
-              "Charging" if r.power_w > 0 else "Discharging")
-    m2.metric("🛣️ Speed",      f"{r.speed:.1f} km/h")
-    m3.metric("🔋 SOH",        f"{r.soh}%",
-              f"-{100-r.soh:.0f}% from new" if r.soh < 100 else "Brand new")
-    m4.metric("📍 Odometer",   f"{r.odokm:.1f} km")
-    m5.metric("🔌 Pack Imbal", f"{r.cell_volt_diff*1000:.1f} mV",
-              "Healthy" if r.cell_volt_diff*1000 < 20 else "Monitor")
+    
+    # Power
+    pwr_delta = "Charging" if r.power_w > 0 else ("-Discharging" if r.power_w < 0 else "Idle")
+    pwr_color = "normal" if r.power_w != 0 else "off"
+    m1.metric("⚡ Power", f"{abs(r.power_w):.0f} W", delta=pwr_delta, delta_color=pwr_color)
+    
+    # Speed
+    m2.metric("🛣️ Speed", f"{r.speed:.1f} km/h")
+    
+    # SOH 
+    soh_delta = f"-{100-r.soh:.0f}% from new" if r.soh < 100 else "Brand new"
+    soh_color = "normal" if r.soh < 100 else "off"
+    m3.metric("🔋 SOH", f"{r.soh}%", delta=soh_delta, delta_color=soh_color)
+    
+    # Odo
+    m4.metric("📍 Odometer", f"{r.odokm:.1f} km")
+    
+    # Pack Imbalance
+    imb_delta = "Healthy" if r.cell_volt_diff * 1000 < 20 else "-Monitor"
+    m5.metric("🔌 Pack Imbal", f"{r.cell_volt_diff*1000:.1f} mV", delta=imb_delta)
 
     st.divider()
 
