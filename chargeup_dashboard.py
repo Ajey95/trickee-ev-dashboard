@@ -354,7 +354,10 @@ with st.sidebar:
 #  AUTO-PLAY ENGINE
 # ─────────────────────────────────────────────────────────────────────────────
 if st.session_state.playing:
-    time.sleep(1.0 / max(st.session_state.play_spd, 0.1))
+    # Streamlit inherently has ~200-500ms lag per frame rendering Plotly charts.
+    # Reduce sleep buffer to account for rendering overhead.
+    base_sleep = 1.0 / max(st.session_state.play_spd, 0.1)
+    time.sleep(max(0.01, base_sleep - 0.25))
     if st.session_state.msg_step < N_MSGS - 1:
         st.session_state.msg_step += 1
     else:
@@ -388,7 +391,7 @@ if st.session_state.role == "fleet":
         )
     if not cur_state.empty:
         with h2:
-            st.metric("Vehicles Active", int(cur_state[cur_state.speed > 0].shape[0]))
+            st.metric("Vehicles Active", int(cur_state[cur_state.charge_label == "Discharging"].shape[0]))
         with h3:
             st.metric("Charging Now", int(cur_state[cur_state.charge_label == "Charging"].shape[0]))
 
@@ -791,10 +794,10 @@ else:
 
     # Temperature gauge
     with g4:
-        t_col = GREEN if r.temp1 < 38 else (GOLD if r.temp1 < 45 else RED)
+        t_col = GREEN if r.max_temp < 38 else (GOLD if r.max_temp < 45 else RED)
         fig_g_t = go.Figure(go.Indicator(
             mode="gauge+number",
-            value=r.temp1,
+            value=r.max_temp,
             gauge={
                 "axis": {"range": [0, 60], "tickcolor": DIM},
                 "bar":  {"color": t_col},
@@ -849,8 +852,8 @@ else:
         if active:
             avg_v   = np.mean(active)
             bar_clr = [
-                GREEN  if abs(v - avg_v) < 0.010 else
-                (GOLD  if abs(v - avg_v) < 0.025 else RED)
+                GREEN  if abs(v - avg_v) < 0.025 else
+                (GOLD  if abs(v - avg_v) < 0.050 else RED)
                 for v in cell_vals
             ]
             fig_cells = go.Figure(go.Bar(
